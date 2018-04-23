@@ -6,7 +6,6 @@ function New-TervisTrelloAuthTokens {
     param (
         $APIKey
     )
-
     $AuthRead = New-TrelloToken -Key $APIKey -AppName "TrellOpsRead" -Expiration "never" -Scope 'read'
     $AuthWrite = New-TrelloToken -Key $APIKey -AppName "TrellOpsWrite" -Expiration "never" -Scope 'read,write'
 }
