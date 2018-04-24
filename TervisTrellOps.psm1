@@ -26,26 +26,33 @@ function New-TervisTrelloCardForVMsNotAccountedFor {
         AccessKey = $AuthWriteCredential.UserName
     }
 
-    Get-TrelloBoard -Token $AuthRead -All
+    $Token = $AuthWrite
 
+    Get-TrelloBoard -Token $Token -All
 
-    Get-TrelloBoard -Token $AuthRead -Name "Hyper-V Virtual Machines"
-    $Board = Get-TrelloBoard -Token $AuthRead -Name "Hyper-V Virtual Machines"
-    $cards = Get-TrelloCard -Token $AuthRead -All
-    $cards = Get-TrelloCard -Token $AuthRead -All -Id $Board.Id
-    $Lists = Get-TrelloList -Token $AuthRead -All -Id $Board.Id
+    Get-TrelloBoard -Token $Token -Name "Hyper-V Virtual Machines"
+    $Board = Get-TrelloBoard -Token $Token -Name "Hyper-V Virtual Machines"
+    $cards = Get-TrelloCard -Token $Token -All
+    $cards = Get-TrelloCard -Token $Token -All -Id $Board.Id
+    $Lists = Get-TrelloList -Token $Token -All -Id $Board.Id
     $UnownedList = $Lists | where Name -match Unowned
+    $DeletedList = $Lists | where Name -eq Deleted
 
+    
 
     $cards | Add-Member -MemberType ScriptProperty -Name VMName -Force -Value {
         ($This.Name -split " " | Select-Object -SkipLast 1) -join " "
     }
+
+    $CardsNotInDeleted = $Cards | where IdList -ne $DeletedList.Id
 
     $VMSAlreadyOnTrelloBoard = $cards.VMName
 
     $VMs = Find-TervisVM -Name *
 
     $VMs | where Name -NotIn $VMSAlreadyOnTrelloBoard | select -ExpandProperty Name | % {
-        New-TrelloCard -Token $AuthWrite -Id $UnownedList.Id -Name $_ -Description ""
+        New-TrelloCard -Token $Token -Id $UnownedList.Id -Name $_ -Description ""
     }
+
+    $CardsNotInDeleted | where VMName -NotIn ($VMs.Name) | select -ExpandProperty VMName
 }
