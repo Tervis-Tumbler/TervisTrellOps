@@ -12,14 +12,14 @@ function New-TervisTrelloAuthTokens {
 
 function New-TervisTrelloCardForVMsNotAccountedFor {
 
-    $AuthReadCredential = Get-PasswordstateCredential -PasswordID 5391
+    $AuthReadCredential = Get-PasswordstatePassword -AsCredential -ID 5391
 
     $AuthRead = @{
         Token = $AuthReadCredential.GetNetworkCredential().password
         AccessKey = $AuthReadCredential.UserName
     }
 
-    $AuthWriteCredential = Get-PasswordstateCredential -PasswordID 5392
+    $AuthWriteCredential = Get-PasswordstatePassword -AsCredential -ID 5392
 
     $AuthWrite = @{
         Token = $AuthWriteCredential.GetNetworkCredential().password
