@@ -56,3 +56,53 @@ function New-TervisTrelloCardForVMsNotAccountedFor {
 
     $CardsNotInDeleted | where VMName -NotIn ($VMs.Name) | select -ExpandProperty VMName
 }
+
+function Get-VMsFromHyperVTrelloBoard{
+    param(
+        [parameter(Mandatory)]
+        [ValidateSet("Need To Keep - Critical","Need To Keep - Non Critical")]
+        $BoardName,
+        
+        [switch]$IncludeVM
+    )
+    
+    $AuthReadCredential = Get-PasswordstatePassword -AsCredential -ID 5391
+    $AuthRead = @{
+        Token = $AuthReadCredential.GetNetworkCredential().password
+        AccessKey = $AuthReadCredential.UserName
+    }
+    $AuthWriteCredential = Get-PasswordstatePassword -AsCredential -ID 5392
+    $AuthWrite = @{
+        Token = $AuthWriteCredential.GetNetworkCredential().password
+        AccessKey = $AuthWriteCredential.UserName
+    }
+    $Token = $AuthRead
+    $Board = Get-TrelloBoard -Token $Token -Name "Hyper-V Virtual Machines"
+    $cards = Get-TrelloCard -Token $Token -All -Id $Board.ID
+    $Lists = Get-TrelloList -Token $Token -All -Id $Board.Id
+    if($BoardName -eq "Need To Keep - Critical"){
+        $VMList = $Lists | where name -eq "Need To Keep - Critical"
+        $VMsInList = $cards | where idlist -eq $VMList.id
+    }
+    elseif($BoardName -eq "Need To Keep - Non Critical"){
+        $VMList = $Lists | where name -eq "Need To Keep - Non Critical"
+        $VMsInList = $cards | where idlist -eq $VMList.id
+    }
+    if($IncludeVM){
+        $VMs = Find-TervisVM *
+        $ClusterList = get-cluster -Domain tervis.prv
+        $ClusterNodeList = $ClusterList | Get-ClusterNode
+        foreach($VMInList in $VMsInList){
+            $VM = $VMs | where VMName -eq $VMInList.name
+            if($ClusterNodeList -contains $VM.Computername){
+                $ClusterName = $ClusterNodeList | Where-Object Name -eq $VM.Computername
+                $VM | Add-Member -MemberType NoteProperty -Name ClusterName -Force -Value $ClusterName.Name
+                }
+            $VMInList | Add-Member -MemberType NoteProperty -Name VM -Value $VM -Force -PassThru
+            }
+        }
+    else {
+        $VMsInList
+    }
+    
+}
