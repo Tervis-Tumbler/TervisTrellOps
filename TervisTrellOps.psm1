@@ -95,14 +95,12 @@ function Get-VMsFromHyperVTrelloBoard{
         foreach($VMInList in $VMsInList){
             $VM = $VMs | where VMName -eq $VMInList.name
             if($ClusterNodeList -contains $VM.Computername){
-                $ClusterName = $ClusterNodeList | Where-Object Name -eq $VM.Computername
-                $VM | Add-Member -MemberType NoteProperty -Name ClusterName -Force -Value $ClusterName.Name
+                $ClusterNode = $ClusterNodeList | Where-Object Name -eq $VM.Computername
+                $VM | Add-Member -MemberType NoteProperty -Name ClusterName -Force -Value $ClusterNode.Cluster
                 }
-            $VMInList | Add-Member -MemberType NoteProperty -Name VM -Value $VM -Force -PassThru
+            $VMInList | Add-Member -MemberType NoteProperty -Name VM -Value $VM -Force
             }
         }
-    else {
-        $VMsInList
-    }
+    $VMsInList
     
 }
